@@ -102,64 +102,68 @@ export default function ToolDetailModal({
   const getPricingColor = (pricing: string) => {
     switch (pricing) {
       case "free":
-        return "bg-green-100 text-green-800";
+        return "bg-success/15 text-success border border-success/30";
       case "freemium":
-        return "bg-orange-100 text-orange-800";
+        return "bg-warning/15 text-warning border border-warning/30";
       case "premium":
-        return "bg-purple-100 text-purple-800";
+        return "bg-primary/15 text-primary border border-primary/30";
+      case "trial":
+        return "bg-accent/15 text-accent border border-accent/30";
+      case "subscription":
+        return "bg-chart-4/15 text-chart-4 border border-chart-4/30";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-muted text-muted-foreground";
     }
   };
 
   const getUseCaseColor = (color?: string) => {
     switch (color) {
       case "blue":
-        return "bg-blue-50 border border-blue-200";
+        return "bg-primary/10 border border-primary/20";
       case "green":
-        return "bg-green-50 border border-green-200";
+        return "bg-accent/10 border border-accent/20";
       case "purple":
-        return "bg-purple-50 border border-purple-200";
+        return "bg-chart-4/10 border border-chart-4/20";
       case "orange":
-        return "bg-orange-50 border border-orange-200";
+        return "bg-warning/10 border border-warning/20";
       default:
-        return "bg-slate-50 border border-slate-200";
+        return "bg-muted/50 border border-border";
     }
   };
 
   const getUseCaseTextColor = (color?: string) => {
     switch (color) {
       case "blue":
-        return "text-blue-900";
+        return "text-primary";
       case "green":
-        return "text-green-900";
+        return "text-accent";
       case "purple":
-        return "text-purple-900";
+        return "text-chart-4";
       case "orange":
-        return "text-orange-900";
+        return "text-warning";
       default:
-        return "text-slate-900";
+        return "text-foreground";
     }
   };
 
   const getUseCaseDescColor = (color?: string) => {
     switch (color) {
       case "blue":
-        return "text-blue-700";
+        return "text-primary/70";
       case "green":
-        return "text-green-700";
+        return "text-accent/70";
       case "purple":
-        return "text-purple-700";
+        return "text-chart-4/70";
       case "orange":
-        return "text-orange-700";
+        return "text-warning/70";
       default:
-        return "text-slate-700";
+        return "text-muted-foreground";
     }
   };
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl max-h-screen overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl max-h-screen overflow-y-auto glass-strong border-border">
         <div className="p-6">
           <div className="flex items-start justify-between mb-6">
             <div className="flex items-center space-x-4">
@@ -171,10 +175,10 @@ export default function ToolDetailModal({
                 ></i>
               </div>
               <div>
-                <h2 className="text-xl font-bold text-slate-900">
+                <h2 className="text-xl font-bold text-foreground">
                   {tool.name}
                 </h2>
-                <p className="text-slate-600">
+                <p className="text-muted-foreground">
                   {category?.name || "OSINT Tool"}
                 </p>
               </div>
@@ -186,40 +190,40 @@ export default function ToolDetailModal({
 
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-3">
+              <h3 className="text-lg font-semibold text-foreground mb-3">
                 Description
               </h3>
-              <p className="text-slate-700 leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed">
                 {tool.fullDescription || tool.description}
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-slate-50 rounded-lg p-4">
-                <div className="text-sm text-slate-600 mb-1">Pricing</div>
-                <div className="text-lg font-semibold text-slate-900">
+              <div className="bg-muted/50 rounded-lg p-4">
+                <div className="text-sm text-muted-foreground mb-1">Pricing</div>
+                <div className="text-lg font-semibold text-foreground">
                   <Badge className={getPricingColor(tool.pricing)}>
                     {tool.pricing.charAt(0).toUpperCase() +
                       tool.pricing.slice(1)}
                   </Badge>
                 </div>
               </div>
-              <div className="bg-slate-50 rounded-lg p-4">
-                <div className="text-sm text-slate-600 mb-1">Platform</div>
-                <div className="text-lg font-semibold text-slate-900 capitalize">
+              <div className="bg-muted/50 rounded-lg p-4">
+                <div className="text-sm text-muted-foreground mb-1">Platform</div>
+                <div className="text-lg font-semibold text-foreground capitalize">
                   {tool.platform}
                 </div>
               </div>
-              <div className="bg-slate-50 rounded-lg p-4">
-                <div className="text-sm text-slate-600 mb-1">Rating</div>
-                <div className="text-lg font-semibold text-slate-900 flex items-center">
+              <div className="bg-muted/50 rounded-lg p-4">
+                <div className="text-sm text-muted-foreground mb-1">Rating</div>
+                <div className="text-lg font-semibold text-foreground flex items-center">
                   <Star className="w-4 h-4 text-yellow-500 mr-1 fill-current" />
                   {formatRating(tool.rating)}/5
                 </div>
               </div>
-              <div className="bg-slate-50 rounded-lg p-4">
-                <div className="text-sm text-slate-600 mb-1">Users</div>
-                <div className="text-lg font-semibold text-slate-900">
+              <div className="bg-muted/50 rounded-lg p-4">
+                <div className="text-sm text-muted-foreground mb-1">Users</div>
+                <div className="text-lg font-semibold text-foreground">
                   {formatUserCount(tool.userCount)}
                 </div>
               </div>
@@ -227,14 +231,14 @@ export default function ToolDetailModal({
 
             {tool.features && tool.features.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">
+                <h3 className="text-lg font-semibold text-foreground mb-3">
                   Key Features
                 </h3>
                 <ul className="space-y-2">
                   {tool.features.map((feature, index) => (
                     <li
                       key={index}
-                      className="flex items-center text-slate-700"
+                      className="flex items-center text-muted-foreground"
                     >
                       <Check className="w-4 h-4 text-accent mr-3 flex-shrink-0" />
                       {feature}
@@ -246,7 +250,7 @@ export default function ToolDetailModal({
 
             {tool.useCases && tool.useCases.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">
+                <h3 className="text-lg font-semibold text-foreground mb-3">
                   Investigation Use Cases
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -273,7 +277,7 @@ export default function ToolDetailModal({
 
             {tool.tags && tool.tags.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">
+                <h3 className="text-lg font-semibold text-foreground mb-3">
                   Tags
                 </h3>
                 <div className="flex flex-wrap gap-2">
@@ -288,7 +292,7 @@ export default function ToolDetailModal({
           </div>
         </div>
 
-        <div className="bg-slate-50 px-6 py-4 rounded-b-xl flex justify-between items-center">
+        <div className="bg-muted/30 px-6 py-4 rounded-b-xl flex justify-between items-center border-t border-border">
           <div className="flex items-center space-x-4">
             <Button
               variant="ghost"
@@ -301,7 +305,7 @@ export default function ToolDetailModal({
               className="flex items-center space-x-2"
             >
               <Heart
-                className={`w-4 h-4 ${isFavorite ? "fill-current text-red-500" : "text-slate-600"}`}
+                className={`w-4 h-4 ${isFavorite ? "fill-current text-error" : "text-muted-foreground"}`}
               />
               <span>
                 {isFavorite ? "Remove from Favorites" : "Add to Favorites"}
@@ -318,12 +322,12 @@ export default function ToolDetailModal({
             </Button>
           </div>
           <div className="flex space-x-3">
-            <Button variant="outline" onClick={onClose}>
+            <Button variant="outline" onClick={onClose} className="glass border-border">
               Close
             </Button>
             <Button
               onClick={handleOpenTool}
-              className="bg-primary hover:bg-primary/90"
+              className="bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90"
             >
               <ExternalLink className="w-4 h-4 mr-2" />
               Open Tool

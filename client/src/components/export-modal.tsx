@@ -106,7 +106,7 @@ export default function ExportModal({
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               Export Format
             </label>
             <Select value={format} onValueChange={setFormat}>
@@ -123,7 +123,7 @@ export default function ExportModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               Include
             </label>
             <div className="space-y-3">
@@ -140,7 +140,7 @@ export default function ExportModal({
                 />
                 <label
                   htmlFor="descriptions"
-                  className="text-sm text-slate-700 cursor-pointer"
+                  className="text-sm text-foreground cursor-pointer"
                 >
                   Tool descriptions
                 </label>
@@ -156,7 +156,7 @@ export default function ExportModal({
                 />
                 <label
                   htmlFor="links"
-                  className="text-sm text-slate-700 cursor-pointer"
+                  className="text-sm text-foreground cursor-pointer"
                 >
                   Direct links
                 </label>
@@ -172,7 +172,7 @@ export default function ExportModal({
                 />
                 <label
                   htmlFor="statistics"
-                  className="text-sm text-slate-700 cursor-pointer"
+                  className="text-sm text-foreground cursor-pointer"
                 >
                   Usage statistics
                 </label>
@@ -191,7 +191,7 @@ export default function ExportModal({
                 />
                 <label
                   htmlFor="category"
-                  className="text-sm text-slate-700 cursor-pointer"
+                  className="text-sm text-foreground cursor-pointer"
                 >
                   Category information
                 </label>
@@ -199,8 +199,8 @@ export default function ExportModal({
             </div>
           </div>
 
-          <div className="bg-slate-50 rounded-lg p-4">
-            <div className="flex items-center text-sm text-slate-600">
+          <div className="bg-muted/50 rounded-lg p-4">
+            <div className="flex items-center text-sm text-muted-foreground">
               <Info className="w-4 h-4 mr-2 flex-shrink-0" />
               Export will include{" "}
               <span className="font-medium mx-1">{toolCount} tools</span> from
@@ -216,7 +216,7 @@ export default function ExportModal({
           <Button
             onClick={handleExport}
             disabled={exportMutation.isPending}
-            className="bg-accent hover:bg-accent/90"
+            className="bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90"
           >
             <Download className="w-4 h-4 mr-2" />
             {exportMutation.isPending ? "Exporting..." : "Export Results"}
