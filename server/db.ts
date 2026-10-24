@@ -1,14 +1,14 @@
-import { Pool, neonConfig } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-serverless";
-import ws from "ws";
-import * as schema from "@shared/schema";
+import { createClient } from "@supabase/supabase-js";
 
-neonConfig.webSocketConstructor = ws;
+const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+const supabaseKey =
+  process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 
-if (!process.env.DATABASE_URL) {
-  // Use in-memory storage when no database is configured
-  console.warn("DATABASE_URL not set — using in-memory storage");
+if (!supabaseUrl || !supabaseKey) {
+  console.warn("Supabase credentials not found — falling back to in-memory storage");
 }
 
-export const pool = process.env.DATABASE_URL ? new Pool({ connectionString: process.env.DATABASE_URL }) : null;
-export const db = pool ? drizzle({ client: pool, schema }) : null;
+export const supabase =
+  supabaseUrl && supabaseKey
+    ? createClient(supabaseUrl, supabaseKey)
+    : null;

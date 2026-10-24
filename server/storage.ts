@@ -1,8 +1,4 @@
 import {
-  categories,
-  tools,
-  favorites,
-  userOnboarding,
   type Category,
   type Tool,
   type Favorite,
@@ -12,8 +8,82 @@ import {
   type InsertFavorite,
   type InsertUserOnboarding,
 } from "@shared/schema";
-import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { supabase } from "./db";
+
+// ---- snake_case <-> camelCase mappers (Supabase returns DB column names) ----
+function mapCategory(row: Record<string, any>): Category {
+  return {
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    description: row.description,
+    icon: row.icon,
+    color: row.color,
+  };
+}
+
+function mapTool(row: Record<string, any>): Tool {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    fullDescription: row.full_description,
+    url: row.url,
+    categoryId: row.category_id,
+    pricing: row.pricing,
+    platform: row.platform,
+    rating: row.rating,
+    userCount: row.user_count,
+    features: row.features || [],
+    useCases: row.use_cases || [],
+    tags: row.tags || [],
+    isVerified: row.is_verified,
+    lastUpdated: row.last_updated,
+    isOfficial: row.is_official,
+    hasApi: row.has_api,
+    iconType: row.icon_type,
+    iconName: row.icon_name,
+    iconColor: row.icon_color,
+  };
+}
+
+function mapOnboarding(row: Record<string, any>): UserOnboarding {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    hasSeenWelcome: row.has_seen_welcome,
+    hasSeenCategoryFilter: row.has_seen_category_filter,
+    hasSeenSearch: row.has_seen_search,
+    hasSeenToolCard: row.has_seen_tool_card,
+    hasSeenExport: row.has_seen_export,
+    hasSeenReport: row.has_seen_report,
+    completedOnboarding: row.completed_onboarding,
+  };
+}
+
+function toolToSnake(tool: InsertTool): Record<string, any> {
+  return {
+    name: tool.name,
+    description: tool.description,
+    full_description: tool.fullDescription ?? null,
+    url: tool.url,
+    category_id: tool.categoryId,
+    pricing: tool.pricing,
+    platform: tool.platform,
+    rating: tool.rating ?? 40,
+    user_count: tool.userCount ?? 0,
+    features: tool.features || [],
+    use_cases: tool.useCases || [],
+    tags: tool.tags || [],
+    is_verified: tool.isVerified ?? true,
+    last_updated: tool.lastUpdated || new Date().toISOString(),
+    is_official: tool.isOfficial ?? false,
+    has_api: tool.hasApi ?? false,
+    icon_type: tool.iconType,
+    icon_name: tool.iconName,
+    icon_color: tool.iconColor,
+  };
+}
 
 export interface IStorage {
   // Categories
@@ -1010,23 +1080,29 @@ export class MemStorage implements IStorage {
 
 export class DatabaseStorage implements IStorage {
   async getCategories(): Promise<Category[]> {
-    return await db.select().from(categories);
+    const { data, error } = await supabase!.from("categories").select("*");
+    if (error) throw error;
+    return (data as Record<string, any>[]).map(mapCategory);
   }
 
   async getCategoryBySlug(slug: string): Promise<Category | undefined> {
-    const [category] = await db
-      .select()
-      .from(categories)
-      .where(eq(categories.slug, slug));
-    return category || undefined;
+    const { data, error } = await supabase!
+      .from("categories")
+      .select("*")
+      .eq("slug", slug)
+      .maybeSingle();
+    if (error) throw error;
+    return data ? mapCategory(data as Record<string, any>) : undefined;
   }
 
   async createCategory(insertCategory: InsertCategory): Promise<Category> {
-    const [category] = await db
-      .insert(categories)
-      .values(insertCategory)
-      .returning();
-    return category;
+    const { data, error } = await supabase!
+      .from("categories")
+      .insert(insertCategory)
+      .select()
+      .single();
+    if (error) throw error;
+    return mapCategory(data as Record<string, any>);
   }
 
   async getTools(filters?: {
@@ -1035,15 +1111,13 @@ export class DatabaseStorage implements IStorage {
     pricing?: string;
     hasApi?: boolean;
   }): Promise<Tool[]> {
-    let queryBuilder = db.select().from(tools);
-
+    let query = supabase!.from("tools").select("*");
     if (filters?.categoryId) {
-      queryBuilder = queryBuilder.where(
-        eq(tools.categoryId, filters.categoryId),
-      );
+      query = query.eq("category_id", filters.categoryId);
     }
-
-    const allTools = await queryBuilder;
+    const { data, error } = await query;
+    if (error) throw error;
+    let allTools = (data as Record<string, any>[]).map(mapTool);
 
     if (!filters) return allTools;
 
@@ -1058,81 +1132,89 @@ export class DatabaseStorage implements IStorage {
           );
         if (!matches) return false;
       }
-
       if (filters.pricing && tool.pricing !== filters.pricing) return false;
       if (filters.hasApi !== undefined && tool.hasApi !== filters.hasApi)
         return false;
-
       return true;
     });
   }
 
   async getToolById(id: number): Promise<Tool | undefined> {
-    const [tool] = await db.select().from(tools).where(eq(tools.id, id));
-    return tool || undefined;
+    const { data, error } = await supabase!
+      .from("tools")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+    if (error) throw error;
+    return data ? mapTool(data as Record<string, any>) : undefined;
   }
 
   async getToolsByCategory(categoryId: number): Promise<Tool[]> {
-    return await db
-      .select()
-      .from(tools)
-      .where(eq(tools.categoryId, categoryId));
+    const { data, error } = await supabase!
+      .from("tools")
+      .select("*")
+      .eq("category_id", categoryId);
+    if (error) throw error;
+    return (data as Record<string, any>[]).map(mapTool);
   }
 
   async createTool(insertTool: InsertTool): Promise<Tool> {
-    const toolData = {
-      ...insertTool,
-      hasApi: insertTool.hasApi ?? false,
-      fullDescription: insertTool.fullDescription ?? null,
-      rating: insertTool.rating ?? 4.0,
-      userCount: insertTool.userCount ?? 0,
-      features: insertTool.features ?? [],
-      lastUpdated: insertTool.lastUpdated ?? new Date().toISOString(),
-      tags: insertTool.tags ?? [],
-      isVerified: insertTool.isVerified ?? true,
-      isOfficial: insertTool.isOfficial ?? false,
-    };
-
-    const [tool] = await db.insert(tools).values(toolData).returning();
-    return tool;
+    const { data, error } = await supabase!
+      .from("tools")
+      .insert(toolToSnake(insertTool))
+      .select()
+      .single();
+    if (error) throw error;
+    return mapTool(data as Record<string, any>);
   }
 
   async getFavorites(userId: string): Promise<number[]> {
-    const userFavorites = await db
-      .select()
-      .from(favorites)
-      .where(eq(favorites.userId, userId));
-    return userFavorites.map((f) => f.toolId);
+    const { data, error } = await supabase!
+      .from("favorites")
+      .select("tool_id")
+      .eq("user_id", userId);
+    if (error) throw error;
+    return (data as { tool_id: number }[]).map((f) => f.tool_id);
   }
 
   async addFavorite(insertFavorite: InsertFavorite): Promise<Favorite> {
-    const [favorite] = await db
-      .insert(favorites)
-      .values(insertFavorite)
-      .returning();
-    return favorite;
+    const { data, error } = await supabase!
+      .from("favorites")
+      .insert({ tool_id: insertFavorite.toolId, user_id: insertFavorite.userId })
+      .select()
+      .single();
+    if (error) throw error;
+    return data as Favorite;
   }
 
   async removeFavorite(toolId: number, userId: string): Promise<void> {
-    await db
-      .delete(favorites)
-      .where(eq(favorites.toolId, toolId) && eq(favorites.userId, userId));
+    const { error } = await supabase!
+      .from("favorites")
+      .delete()
+      .eq("tool_id", toolId)
+      .eq("user_id", userId);
+    if (error) throw error;
   }
 
   async isFavorite(toolId: number, userId: string): Promise<boolean> {
-    const [favorite] = await db
-      .select()
-      .from(favorites)
-      .where(eq(favorites.toolId, toolId) && eq(favorites.userId, userId));
-    return !!favorite;
+    const { data, error } = await supabase!
+      .from("favorites")
+      .select("id")
+      .eq("tool_id", toolId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error) throw error;
+    return !!data;
   }
 
   async getUserOnboarding(userId: string): Promise<UserOnboarding | undefined> {
-    const [onboarding] = await db
-      .select()
-      .from(userOnboarding)
-      .where(eq(userOnboarding.userId, userId));
-    return onboarding || undefined;
+    const { data, error } = await supabase!
+      .from("user_onboarding")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error) throw error;
+    return data ? mapOnboarding(data as Record<string, any>) : undefined;
   }
 
   async updateOnboardingStep(
@@ -1140,13 +1222,11 @@ export class DatabaseStorage implements IStorage {
     step: string,
   ): Promise<UserOnboarding> {
     let existing = await this.getUserOnboarding(userId);
-
     if (!existing) {
-      // Create new onboarding record
       existing = await this.createUserOnboarding({ userId });
     }
 
-    const updateData: Partial<UserOnboarding> = {};
+    const updateData: Record<string, boolean> = {};
     switch (step) {
       case "welcome":
         updateData.hasSeenWelcome = true;
@@ -1171,24 +1251,38 @@ export class DatabaseStorage implements IStorage {
         break;
     }
 
-    const [updated] = await db
-      .update(userOnboarding)
-      .set(updateData)
-      .where(eq(userOnboarding.userId, userId))
-      .returning();
+    const snakeUpdate: Record<string, boolean> = {};
+    if (updateData.hasSeenWelcome !== undefined) snakeUpdate.has_seen_welcome = updateData.hasSeenWelcome;
+    if (updateData.hasSeenCategoryFilter !== undefined) snakeUpdate.has_seen_category_filter = updateData.hasSeenCategoryFilter;
+    if (updateData.hasSeenSearch !== undefined) snakeUpdate.has_seen_search = updateData.hasSeenSearch;
+    if (updateData.hasSeenToolCard !== undefined) snakeUpdate.has_seen_tool_card = updateData.hasSeenToolCard;
+    if (updateData.hasSeenExport !== undefined) snakeUpdate.has_seen_export = updateData.hasSeenExport;
+    if (updateData.hasSeenReport !== undefined) snakeUpdate.has_seen_report = updateData.hasSeenReport;
+    if (updateData.completedOnboarding !== undefined) snakeUpdate.completed_onboarding = updateData.completedOnboarding;
 
-    return updated;
+    const { data, error } = await supabase!
+      .from("user_onboarding")
+      .update(snakeUpdate)
+      .eq("user_id", userId)
+      .select()
+      .single();
+    if (error) throw error;
+    return mapOnboarding(data as Record<string, any>);
   }
 
   async createUserOnboarding(
     insertOnboarding: InsertUserOnboarding,
   ): Promise<UserOnboarding> {
-    const [onboarding] = await db
-      .insert(userOnboarding)
-      .values(insertOnboarding)
-      .returning();
-    return onboarding;
+    const { data, error } = await supabase!
+      .from("user_onboarding")
+      .insert({ user_id: insertOnboarding.userId })
+      .select()
+      .single();
+    if (error) throw error;
+    return mapOnboarding(data as Record<string, any>);
   }
 }
 
-export const storage = new MemStorage();
+export const storage = supabase
+  ? new DatabaseStorage()
+  : new MemStorage();
